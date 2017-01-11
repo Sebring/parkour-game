@@ -9,28 +9,57 @@ export class ExampleState extends Phaser.State {
 
 
     create() {
-        this.physics.startSystem(Phaser.Physics.ARCADE)
-        this.physics.arcade.gravity.y = GAME.GRAVITY
+      this.physics.startSystem(Phaser.Physics.ARCADE)
+      this.physics.arcade.gravity.y = GAME.GRAVITY
 
-        this.map = this.add.tilemap('example-map')
-        this.map.addTilesetImage('background')
-        this.map.setCollision([1])
+      // tilemap
+      this.map = this.add.tilemap('example-map')
+      this.map.addTilesetImage('background')
+      this.map.setCollision([1])
+      
+      // level
+      this.layer = this.map.createLayer('map_layer')
+      this.layer.resizeWorld()
+      
+      // goal
+      this.goalGroup = this.game.add.group()
+      this.map.createFromObjects('object_layer', 1, 'player', undefined, undefined, undefined,this.goalGroup)
+      this.game.physics.enable(this.goalGroup.children[0], Phaser.Physics.ARCADE)
+      this.goalGroup.children[0].body.allowGravity = false;
 
-        this.layer = this.map.createLayer('Example Map')
-        this.layer.resizeWorld()
-        //this.layer.debug = true;
+      
+      // player
+      this.playerGroup = this.game.add.group()
+      this.map.createFromObjects('object_layer', 2, null, undefined, undefined, undefined, this.playerGroup)
+      console.log(this.playerGroup)
+      let p = this.playerGroup.children[0]
+      this.player = new Player(this.game, p.x, p.y)
+      this.game.trigger(STATE_EVENTS.EXAMPLE_COMPLETED)
+      
+      // input
+      this.cursors = this.game.input.keyboard.createCursorKeys()
+      this.jumpButton = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
+      
+      // timer
+      this.timer = Date.now();
 
-        this.player = new Player(this.game, PLAYER.DEFAULT_X, PLAYER.DEFAULT_Y)
-        this.game.trigger(STATE_EVENTS.EXAMPLE_COMPLETED)
-
-        // input
-        this.cursors = this.game.input.keyboard.createCursorKeys()
-        this.jumpButton = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
-        //this.time = Date.now();
+      const bannerText = 'Parkour.io'
+      this.countDownText = this.add.text(this.world.centerX, 25, bannerText)
+      //banner.font = 'Bangers'
+      this.countDownText.padding.set(10, 16)
+      this.countDownText.fontSize = 32
+      this.countDownText.fill = '#000'
+      this.countDownText.smoothed = false
+      this.countDownText.anchor.setTo(0.5)
     }
 
     update() {
-        
+      // goal
+      this.physics.arcade.overlap(this.player, this.goalGroup, () => {
+        console.log("WIN CONDITION!")
+        console.log((Date.now() - this.time)/1000  + ' seconds');
+        crash()
+      })
       // player vs tile
       this.physics.arcade.collide(this.player, this.layer, (player, tile) => {
         //console.log(player.body.blocked)
@@ -195,6 +224,6 @@ export class ExampleState extends Phaser.State {
     }
 
     render() {
-        //this.game.debug.body(this.player);
+        this.countDownText.text = Number((Date.now() - this.timer)/1000).toFixed(2)  + ' s';
     }
 }
