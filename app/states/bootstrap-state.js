@@ -6,7 +6,7 @@ export class BootstrapState extends Phaser.State {
     }
 
     create() {
-        this.game.stage.backgroundColor = '#000000';
+        this.game.stage.backgroundColor = '#fff';
 
         this.game.trigger(STATE_EVENTS.BOOTSTRAP_COMPLETED);
     }

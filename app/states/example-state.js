@@ -31,11 +31,23 @@ export class ExampleState extends Phaser.State {
       // player
       this.playerGroup = this.game.add.group()
       this.map.createFromObjects('object_layer', 2, null, undefined, undefined, undefined, this.playerGroup)
-      console.log(this.playerGroup)
+      
       let p = this.playerGroup.children[0]
       this.player = new Player(this.game, p.x, p.y)
       this.game.trigger(STATE_EVENTS.EXAMPLE_COMPLETED)
-      
+
+      // stickman
+          /* stickman
+    this.player = this.game.add.sprite(100,150,'p_run')
+    this.player.animations.add('run')
+    this.player.animations.play('run', 10, true)
+    this.player.scale.set(0.5,0.5)
+    /*
+    /*
+      this.stickman = this.game.add.sprite(100,100,'p_run')
+      this.stickman.animations.add('run')
+      this.stickman.animations.play('run', 50, true)
+      */
       // input
       this.cursors = this.game.input.keyboard.createCursorKeys()
       this.jumpButton = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
@@ -51,6 +63,10 @@ export class ExampleState extends Phaser.State {
       this.countDownText.fill = '#000'
       this.countDownText.smoothed = false
       this.countDownText.anchor.setTo(0.5)
+
+      // author text
+      let text = this.add.text(this.world.centerX, this.world.bottom - 30, 'v.0.0.1 - Johan Sebring')
+      text.fontSize = 16
     }
 
     update() {
