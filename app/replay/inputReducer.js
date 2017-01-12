@@ -1,10 +1,9 @@
 
 const input = (state, action) => {
-  console.log('inputReducer')
   switch (action.type) {
     case 'INPUT':
       return {
-        id: action.id,
+        input: action.id,
         time: action.time
       }
     default:
@@ -12,10 +11,19 @@ const input = (state, action) => {
 	}
 }
 
+const finish = (state, action) => {
+  return {
+    game_event: action.game_event,
+    time: action.time
+  }
+}
+
 export const inputs = (state = [], action) => {
   switch (action.type) {
     case 'INPUT':
       return [...state, input(undefined, action)]
+    case 'FINISH':
+      return [...state, finish(undefined, action)]
     default:
       return state
 	}

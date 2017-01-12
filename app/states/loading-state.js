@@ -13,7 +13,7 @@ export class LoadingState extends Phaser.State {
   }
 
   create() {
-    this.time.events.add(500, () => {
+    this.time.events.add(50, () => {
       this.game.trigger(STATE_EVENTS.LOADING_COMPLETED)
     });
   }

@@ -11,6 +11,13 @@ export class ExampleState extends Phaser.State {
 
     create() {
 
+      // game states
+      this.game_state = {
+        isFinished: false,
+        finishTime: '0.0',
+        replayState: undefined
+      }
+
       // store
       this.store = setupStore()
       this._renderStore()
@@ -72,17 +79,32 @@ export class ExampleState extends Phaser.State {
     }
 
     _renderStore = () => {
-      console.log('dispatch')
+    /* console.log('dispatch')
       console.log(this.store.getState())
+    */
+    }
+
+    _finish() {
+      console.log("WIN CONDITION!")
+      console.log((Date.now() - this.timer)/1000  + ' seconds')
+      let finishTime = Number((Date.now() - this.timer)/1000).toString()
+      this.store.dispatch({type:'FINISH', game_event:'FINISH', time:finishTime})
+      this.game.paused = true
+      this.game_state.isFinished = true
+      this.game_state.finishTime = finishTime
+      this.game_state.replayState = this.store.getState()
+      console.log(this.game_state.replayState)
+      this.game.trigger(STATE_EVENTS.EXAMPLE_COMPLETED)
     }
 
     update() {
-      // goal
+      
+      // reached goal
       this.physics.arcade.overlap(this.player, this.goalGroup, () => {
-        console.log("WIN CONDITION!")
-        console.log((Date.now() - this.timer)/1000  + ' seconds');
-       // this.store.dispatch({type:'FINISH', time:time:Number((Date.now() - this.timer)/1000)})
+        this._finish()
+        return
       })
+
       // player vs tile
       this.physics.arcade.collide(this.player, this.layer, (player, tile) => {
         //console.log(player.body.blocked)
@@ -130,16 +152,15 @@ export class ExampleState extends Phaser.State {
         if (true || !this.player.isFalling()) {
           this.player.body.velocity.x = 250
         } else {
-        //  this.player.body.velocity.x -= 1
         }
       }
 
-      if (this.jumpButton.isDown) {//(this.player.body.onFloor() || this.player.body.touching.down)) {
+      if (this.jumpButton.isDown) {
           
         if (this.player.body.onFloor()) {
           // jump
           this.player.body.velocity.y = PLAYER.JUMP_FORCE
-          this.player.isJumping = true;
+          this.player.isJumping = true
 
         }
   
@@ -165,9 +186,8 @@ export class ExampleState extends Phaser.State {
 
     handleClimbingInput() {
         
-        let {dir, ledge} = this.player.isClimbing;
-
-        let heightDiff = ledge.worldY - this.player.body.y;
+        let {dir, ledge} = this.player.isClimbing
+        let heightDiff = ledge.worldY - this.player.body.y
                 
         // has climbed up
         if (heightDiff > this.player.height) {
@@ -194,7 +214,6 @@ export class ExampleState extends Phaser.State {
                   this.player.body.velocity.y = PLAYER.CLIMB_SPEED
                 } else if (this.player.body.velocity.y > PLAYER.GRAB_SPEED_LIMIT ) {
                   console.log('slip')
-                 // this.player.body.velocity.y *=.5
                   this.player.dropLedge()
                   return
                 }
@@ -259,6 +278,7 @@ export class ExampleState extends Phaser.State {
     }
 
     render() {
-        this.countDownText.text = Number((Date.now() - this.timer)/1000).toFixed(2)  + ' s';
+      let timeValue = this.game_state.isFinished? this.game_state.finishTime : Number((Date.now() - this.timer)/1000).toFixed(2)
+        this.countDownText.text = timeValue  + ' s'
     }
 }

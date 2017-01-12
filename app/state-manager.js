@@ -36,6 +36,10 @@ export class StateManager {
         this.game.on(STATE_EVENTS.LOADING_COMPLETED, () => {
             this.game.state.start('Example')
         })
+
+        this.game.on(STATE_EVENTS.EXAMPLE_COMPLETED, () => {
+            console.log('Example completed')
+        })
     }
 
     start() {
