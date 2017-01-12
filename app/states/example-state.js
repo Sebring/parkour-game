@@ -2,6 +2,7 @@ import GAME from '../constants/game'
 import PLAYER from '../constants/player'
 import STATE_EVENTS from '../constants/state-events'
 import { Player } from '../models/player'
+import setupStore from '../replay/setupStore'
 
 export class ExampleState extends Phaser.State {
     map = null
@@ -9,6 +10,17 @@ export class ExampleState extends Phaser.State {
 
 
     create() {
+
+      // store
+      this.store = setupStore()
+      this._renderStore()
+      this.store.subscribe(this._renderStore)
+      this.lastInput = false;
+      
+      /* TODO add start action with date.now()
+        this.store.dispatch({type:'ADD_INPUT', 
+        id:1,time:Date.now()})
+      */
       this.physics.startSystem(Phaser.Physics.ARCADE)
       this.physics.arcade.gravity.y = GAME.GRAVITY
 
@@ -36,22 +48,12 @@ export class ExampleState extends Phaser.State {
       this.player = new Player(this.game, p.x, p.y)
       this.game.trigger(STATE_EVENTS.EXAMPLE_COMPLETED)
 
-      // stickman
-          /* stickman
-    this.player = this.game.add.sprite(100,150,'p_run')
-    this.player.animations.add('run')
-    this.player.animations.play('run', 10, true)
-    this.player.scale.set(0.5,0.5)
-    /*
-    /*
-      this.stickman = this.game.add.sprite(100,100,'p_run')
-      this.stickman.animations.add('run')
-      this.stickman.animations.play('run', 50, true)
-      */
       // input
       this.cursors = this.game.input.keyboard.createCursorKeys()
       this.jumpButton = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
-      
+      // store initial input state
+      this._addInputToStore();
+
       // timer
       this.timer = Date.now();
 
@@ -65,16 +67,21 @@ export class ExampleState extends Phaser.State {
       this.countDownText.anchor.setTo(0.5)
 
       // author text
-      let text = this.add.text(this.world.centerX, this.world.bottom - 30, 'v.0.0.1 - Johan Sebring')
+      let text = this.add.text(this.world.centerX, this.world.bottom - 30, 'v.redux - Johan Sebring')
       text.fontSize = 16
+    }
+
+    _renderStore = () => {
+      console.log('dispatch')
+      console.log(this.store.getState())
     }
 
     update() {
       // goal
       this.physics.arcade.overlap(this.player, this.goalGroup, () => {
         console.log("WIN CONDITION!")
-        console.log((Date.now() - this.time)/1000  + ' seconds');
-        crash()
+        console.log((Date.now() - this.timer)/1000  + ' seconds');
+       // this.store.dispatch({type:'FINISH', time:time:Number((Date.now() - this.timer)/1000)})
       })
       // player vs tile
       this.physics.arcade.collide(this.player, this.layer, (player, tile) => {
@@ -99,15 +106,17 @@ export class ExampleState extends Phaser.State {
       // stop horizontal movement
       if (!this.player.isFalling()) {
         this.player.body.velocity.x = 0
-        this.player.isJumping = false;
+        this.player.isJumping = false
       } else {
 
       }
       
+      // save input to store
+      this._addInputToStore()
 
       // player input/movement
       if (this.player.isClimbing) {
-        this.handleClimbingInput();
+        this.handleClimbingInput()
         return;
       }
 
@@ -141,6 +150,16 @@ export class ExampleState extends Phaser.State {
         }
       }
     
+    }
+
+    _addInputToStore() {
+      let c = {up:this.cursors.up.isDown, down:this.cursors.down.isDown, 
+          left:this.cursors.left.isDown, right:this.cursors.right.isDown, 
+          jump:this.jumpButton.isDown}
+      if (JSON.stringify(c) !== JSON.stringify(this.lastInput)) {
+        this.lastInput = c;
+        this.store.dispatch({type:'INPUT', id:c, time:Number((Date.now() - this.timer)/1000)})
+      }
     }
 
 
