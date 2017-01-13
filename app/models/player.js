@@ -94,10 +94,12 @@ export class Player extends Phaser.Sprite {
     if (input.left) {
       if (true || !this.isFalling()) {
         this.body.velocity.x = -250
+        if (this.scale.x > 0) this.scale.x = -0.2
       }
     } else if (input.right) {
       if (true || !this.isFalling()) {
         this.body.velocity.x = 250
+        if (this.scale.x < 0) this.scale.x = 0.2
       }
     }
 
