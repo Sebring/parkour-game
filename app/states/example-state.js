@@ -3,6 +3,7 @@ import PLAYER from '../constants/player'
 import STATE_EVENTS from '../constants/state-events'
 import { Player } from '../models/player'
 import setupStore from '../replay/setupStore'
+import { Replay } from '../replay/replay'
 
 export class ExampleState extends Phaser.State {
     map = null
@@ -46,23 +47,25 @@ export class ExampleState extends Phaser.State {
       this.game.physics.enable(this.goalGroup.children[0], Phaser.Physics.ARCADE)
       this.goalGroup.children[0].body.allowGravity = false;
 
-      
+      // input
+      this.cursors = this.game.input.keyboard.createCursorKeys()
+      this.jumpButton = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
+
       // player
       this.playerGroup = this.game.add.group()
       this.map.createFromObjects('object_layer', 2, null, undefined, undefined, undefined, this.playerGroup)
       
       let p = this.playerGroup.children[0]
       this.player = new Player(this.game, p.x, p.y)
-      this.game.trigger(STATE_EVENTS.EXAMPLE_COMPLETED)
-
-      // input
-      this.cursors = this.game.input.keyboard.createCursorKeys()
-      this.jumpButton = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
       // store initial input state
-      this._addInputToStore();
+      //this._addInputToStore();
+      this.player.setInputSource(this._inputSourceKeyboard)
+
 
       // timer
       this.timer = Date.now();
+
+
 
       const bannerText = 'Parkour.io'
       this.countDownText = this.add.text(this.world.centerX, 25, bannerText)
@@ -88,34 +91,91 @@ export class ExampleState extends Phaser.State {
     _finish() {
       console.log("WIN CONDITION!")
       console.log((Date.now() - this.timer)/1000  + ' seconds')
-      let finishTime = Number((Date.now() - this.timer)/1000).toString()
+
+      if (this.game_state.isFinished) {
+        // it was a ghost run
+        this.game.paused = true;
+        return;
+      }
+
+      let finishTime = Number((Date.now() - this.timer)).toString()
       this.store.dispatch({type:'FINISH', game_event:'FINISH', time:finishTime})
-      this.game.paused = true
+      //this.game.paused = true
       this.game_state.isFinished = true
       this.game_state.finishTime = finishTime
-      this.game_state.replayState = this.store.getState()
-      console.log(this.game_state.replayState)
+      
+      // save replay and clear
+      this.replay = new Replay(this.store.getState())
+      this.store = setupStore()
+      //this._addInputToStore(GAME.NO_INPUT);
+      
       this.game.trigger(STATE_EVENTS.EXAMPLE_COMPLETED)
+      // reset player position
+      let p = this.playerGroup.children[0]
+      this.player.x = p.x
+      this.player.y = p.y
+      this.ghost = new Player(this.game, p.x, p.y)
+      this.ghost.alpha = 0.5
+      
+      this.ghost.setInputSource(this._inputSourceReplay)
+      this.player.setInputSource(this._inputSourceKeyboard)
+      // reset timer
+      this.timer = false
+      this.timeSlip = false
+    }
+
+    repositionPlayer(position) {
+      console.log('reposition', position)
+      console.log(`x:${this.player.body.x}, y:${this.player.body.y}`)
+    //  this.player.body.x = position.x
+      this.player.body.y = position.y
     }
 
     _getInput() {
-      return {up:this.cursors.up.isDown, down:this.cursors.down.isDown, 
-          left:this.cursors.left.isDown, right:this.cursors.right.isDown, 
-          jump:this.jumpButton.isDown}
+      if (!this.game_state.isFinished) {
+        let i = {up:this.cursors.up.isDown, down:this.cursors.down.isDown, 
+            left:this.cursors.left.isDown, right:this.cursors.right.isDown, 
+            jump:this.jumpButton.isDown}
+        this._addInputToStore(i) 
+        return i
+      } else {
+        // use input from replay
+        if (!this.timer)
+          this.timer = Date.now()
+        return this.replay.getInput(this.timer, this)
+      }
+    }
+
+    _inputSourceKeyboard = () => {
+      let i = {up:this.cursors.up.isDown, down:this.cursors.down.isDown, 
+            left:this.cursors.left.isDown, right:this.cursors.right.isDown, 
+            jump:this.jumpButton.isDown}
+      this._addInputToStore(i) 
+      return i
+    }
+
+    _inputSourceReplay = () =>  {
+      // use input from replay
+      if (!this.timer)
+        this.timer = Date.now()
+      return this.replay.getInput(this.timer, this)
     }
 
     update() {
       
-      // reached goal
+      // player reached goal
       this.physics.arcade.overlap(this.player, this.goalGroup, () => {
+        this.player.setInputSource()
         this._finish()
         return
       })
+       // ghost reached goal
+      this.physics.arcade.overlap(this.ghost, this.goalGroup, () => {
+        this.ghost.setInputSource()
+        return
+      })
 
-      let input = this._getInput()
-
-      // save input to store
-      this._addInputToStore()
+      let input = this.player.getInput()
       
       // player vs tile
       this.physics.arcade.collide(this.player, this.layer, (player, tile) => {
@@ -123,21 +183,32 @@ export class ExampleState extends Phaser.State {
       })
 
       this.player.handleInput(input)
+
+      if (!this.ghost) return;
+
+
+      input = this.ghost.getInput()
+      if (!input) return;
+      
+      // player vs tile
+      this.physics.arcade.collide(this.ghost, this.layer, (player, tile) => {
+        player.handlePlatform(tile, input)          
+      })
+
+      this.ghost.handleInput(input)
     
     }
 
-    _addInputToStore() {
-      let c = {up:this.cursors.up.isDown, down:this.cursors.down.isDown, 
-          left:this.cursors.left.isDown, right:this.cursors.right.isDown, 
-          jump:this.jumpButton.isDown}
-      if (JSON.stringify(c) !== JSON.stringify(this.lastInput)) {
-        this.lastInput = c
-        this.store.dispatch({type:'INPUT', id:c, time:Number((Date.now() - this.timer)/1000)})
+    _addInputToStore(input) {
+      if (JSON.stringify(input) !== JSON.stringify(this.lastInput)) {
+        this.lastInput = input
+        let pos = {x:this.player.body.x, y:this.player.body.y}
+        this.store.dispatch({type:'INPUT', id:input, time:Number((Date.now() - this.timer)), pos:pos})
       }
     }
 
     render() {
-      let timeValue = this.game_state.isFinished? this.game_state.finishTime : Number((Date.now() - this.timer)/1000).toFixed(2)
+      let timeValue = this.game_state.isFinished? this.game_state.finishTime/1000 : Number((Date.now() - this.timer)/1000).toFixed(2)
         this.countDownText.text = timeValue  + ' s'
     }
 }

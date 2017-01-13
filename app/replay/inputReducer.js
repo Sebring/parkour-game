@@ -4,7 +4,8 @@ const input = (state, action) => {
     case 'INPUT':
       return {
         input: action.id,
-        time: action.time
+        time: action.time,
+        pos: action.pos
       }
     default:
       return state
