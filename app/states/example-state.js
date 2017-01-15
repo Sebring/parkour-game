@@ -45,7 +45,8 @@ export class ExampleState extends Phaser.State {
       this.goalGroup = this.game.add.group()
       this.map.createFromObjects('object_layer', 1, 'player', undefined, undefined, undefined,this.goalGroup)
       this.game.physics.enable(this.goalGroup.children[0], Phaser.Physics.ARCADE)
-      this.goalGroup.children[0].body.allowGravity = false;
+      this.goalGroup.children[0].body.allowGravity = false
+      this.goalGroup.children[0].anchor.set(0.5,0.5)
 
       // input
       this.cursors = this.game.input.keyboard.createCursorKeys()
