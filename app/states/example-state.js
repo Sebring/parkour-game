@@ -33,7 +33,7 @@ export class ExampleState extends Phaser.State {
       this.physics.arcade.gravity.y = GAME.GRAVITY
 
       // tilemap
-      this.map = this.add.tilemap('example-map')
+      this.map = this.add.tilemap('map1')
       this.map.addTilesetImage('background')
       this.map.setCollision([1])
       
@@ -60,14 +60,27 @@ export class ExampleState extends Phaser.State {
       this.player = new Player(this.game, p.x, p.y)
       // store initial input state
       //this._addInputToStore();
+
+      this.game.physics.arcade.isPaused = true
       this.player.setInputSource(this._inputSourceKeyboard)
 
 
+      // menu
+      this.menu = this.game.add.text(100, 100 ,'Space to start', {font: "54px Arial Black", fill: "#c51b7d" })
+      this.menu.stroke = '#de77ae'
+      this.menu.strokeThickness = 10
+      this.menu.setShadow(2, 2, "#333333", 2, true, true)
+      this.menu.padding.set(10, 16)
+      this.menu.inputEnabled = true
+
+
+      this.jumpButton.onDown.addOnce( () => {
+        this.game.physics.arcade.isPaused = false
+        this.menu.destroy()
+        this.timer = Date.now();
+      })
+
       // timer
-      this.timer = Date.now();
-
-
-
       const bannerText = 'Parkour.io'
       this.countDownText = this.add.text(this.world.centerX, 25, bannerText)
       //banner.font = 'Bangers'
@@ -92,6 +105,25 @@ export class ExampleState extends Phaser.State {
     _finish() {
       console.log("WIN CONDITION!")
       console.log((Date.now() - this.timer)/1000  + ' seconds')
+      
+      this.game.physics.arcade.isPaused = true
+      this.player.setInputSource(this._inputSourceKeyboard)
+
+
+      // menu
+      this.menu = this.game.add.text(100, 100 ,'Space to start', {font: "54px Arial Black", fill: "#c51b7d" })
+      this.menu.stroke = '#de77ae'
+      this.menu.strokeThickness = 10
+      this.menu.setShadow(2, 2, "#333333", 2, true, true)
+      this.menu.padding.set(10, 16)
+      this.menu.inputEnabled = true
+
+
+      this.jumpButton.onDown.addOnce( () => {
+        this.game.physics.arcade.isPaused = false
+        this.menu.destroy()
+        this.timer = Date.now();
+      })
 
       if (this.game_state.isFinished) {
         this.game.paused = true;
@@ -112,9 +144,11 @@ export class ExampleState extends Phaser.State {
       this.game.trigger(STATE_EVENTS.EXAMPLE_COMPLETED)
       // reset player position
       let p = this.playerGroup.children[0]
+      this.player.body.velocity.set(0,0)
       this.player.body.x = p.x
       this.player.body.y = p.y
       this.ghost = new Player(this.game, p.x, p.y)
+      this.ghost.anchor.set(0.5,0.5)
       this.ghost.alpha = 0.5
       this.ghost.body.allowGravity= false
       
@@ -146,7 +180,10 @@ export class ExampleState extends Phaser.State {
     }
 
     update() {
-      
+      if (this.game.physics.arcade.isPaused) {
+        return
+      }
+        
       // player reached goal
       this.physics.arcade.overlap(this.player, this.goalGroup, () => {
         this.player.setInputSource()
@@ -171,16 +208,6 @@ export class ExampleState extends Phaser.State {
 
       this._setReplayPosition();
     }
-
-    /*
-    _addInputToStore(input) {
-      if (JSON.stringify(input) !== JSON.stringify(this.lastInput)) {
-        this.lastInput = input
-        let pos = {x:this.player.body.x, y:this.player.body.y}
-        this.store.dispatch({type:'INPUT', id:input, time:Number((Date.now() - this.timer)), pos:pos})
-      }
-    }
-    */
 
     _addPositionToStore() {
       if (this.game_state.isFinished === true)
