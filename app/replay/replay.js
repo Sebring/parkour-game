@@ -19,7 +19,7 @@ export class Replay {
 		
 		// first case scenario
 		if (isNaN(action.time)) {
-			console.log('start')
+		//	console.log('start')
 			this.actions.shift()
 			return this.getInput(time)
 		}
@@ -28,7 +28,7 @@ export class Replay {
 
 		// todo - last finsh state
 		if (!action.position) {
-			console.log('last')
+		//	console.log('last')
 			//console.log(this.prevAction.position)
 			return this.prevAction.position
 		}
@@ -58,7 +58,7 @@ export class Replay {
 
 		} else {
 			if (this.prevAction !== undefined && this.prevAction.position !== undefined) {
-				console.log('previous', this.prevAction)
+			//	console.log('previous', this.prevAction)
 				return this.prevAction.position
 
 			} else {

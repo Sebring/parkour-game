@@ -153,7 +153,7 @@ export class ExampleState extends Phaser.State {
       })
        // ghost reached goal
       this.physics.arcade.overlap(this.ghost, this.goalGroup, () => {
-        console.log('Ghost win')
+        //console.log('Ghost win')
         return
       })
 

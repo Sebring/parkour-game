@@ -2,7 +2,7 @@ import PLAYER from '../constants/player'
 import GAME from '../constants/game'
 
 export class Player extends Phaser.Sprite {
-  constructor(game, x = 0, y = 0, key = 'hero_run') {
+  constructor(game, x = 0, y = 0, key = 'gimp') {
     super(game, x, y, key)
     game.add.existing(this)
     
@@ -23,7 +23,7 @@ export class Player extends Phaser.Sprite {
     this.scaleX = 0.3
     this.scale.y = 0.5
     this.scale.x = this.scaleX
-    this.anchor.setTo(0.5)
+    this.anchor.setTo(0.5, 0.5)
   }
 
   setInputSource(handler) {
@@ -35,13 +35,24 @@ export class Player extends Phaser.Sprite {
   }
 
   _addAnimations() {
-    this.animations.add('run')
-    this.animations.play('run', 10, true)    
+    this.animations.add('run', [0,1,2,3], 6, true)
+    this.animations.add('climb', [4,5,6,7]) //, 1, false)
+    this.animations.add('fall' [4])
+    this.animations.play('run')    
   }
 
 
   grabLedge(dir, ledge) {
-  	console.log('grab ledge');
+    console.log('grab ledge', ledge.worldY-this.body.y)
+    let diff = ledge.worldY-this.body.y;
+    let frame = 4
+    if(diff > 15) {
+      frame = diff < 30 ? 5: diff < 40 ? 6 : 7
+
+    } 
+    
+    this.animations.play('climb')
+    this.animations.frame = frame
   	this.body.allowGravity = false
   	this.isJumping = false;
   	//console.log('grab speed ' + this.body.velocity.y)
@@ -52,7 +63,8 @@ export class Player extends Phaser.Sprite {
 	
 	dropLedge() {
 		console.log('drop ledge')
-  	this.body.allowGravity = true
+  	this.animations.play('fall') 
+    this.body.allowGravity = true
   	this.tint = 0xff0000
   	this.isClimbing = false
   }
@@ -60,11 +72,26 @@ export class Player extends Phaser.Sprite {
   isFalling() {
   	let b = this.body.blocked
   	let isBlocked = b.up || b.down || b.left || b.right;
+
   	return !isBlocked;
   }
 
   handlePlatform(tile, input) {
     if (this.body.blocked.down) {
+      if (this.pvy !== 0) {
+        console.log('impact: ', this.pvy)
+        
+        
+        if (this.pvy > 400) {
+          console.log('ouch')
+          this.animations.play('climb', 1, false)
+          this.animations.frame = 7
+        } else {
+          this.animations.play('run')
+        }
+
+        this.pvy = 0
+      }
       return;
     }
     
@@ -85,8 +112,13 @@ export class Player extends Phaser.Sprite {
     // stop horizontal movement unless falling
     if (!this.isFalling()) {
       this.body.velocity.x = 0
-      this.isJumping = false
-    }     
+      if (this.isJumping) {
+        this.isJumping = false
+        this.animations.play('run')
+      }
+    } else {
+      this.pvy = this.body.velocity.y
+    }
 
     if (this.isClimbing) {
       this._handleClimbingInput(input)
@@ -124,7 +156,18 @@ export class Player extends Phaser.Sprite {
         
         let {dir, ledge} = this.isClimbing
         let heightDiff = ledge.worldY - this.body.y
-                
+        
+        // animation frame depending on climb %
+        console.log(heightDiff)
+        let frame = 7
+        if (heightDiff < 20) {
+          frame = 4
+        } else { 
+          frame = heightDiff > 40? 6 : 5
+        }
+        this.animations.frame = frame
+
+
         // has climbed up
         if (heightDiff > this.height) {
             console.log('climbed up')
