@@ -10,6 +10,8 @@ export class LoadingState extends Phaser.State {
     this.load.spritesheet('p_run', 'assets/sprites/stickman_run.png', 100,150)
     this.load.image('background', 'assets/images/background.png')
     this.load.tilemap('example-map', 'assets/maps/example-map.json', null, Phaser.Tilemap.TILED_JSON)
+
+    this.load.atlas('hero_run', 'assets/sprites/p_run.png', 'assets/sprites/p_run.json')
   }
 
   create() {
