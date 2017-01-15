@@ -6,7 +6,7 @@ export class Replay {
 		console.log(actions)
 		this.timeSlip = false
 		this.actions = actions
-		this.lastAction = undefined
+		this.prevAction = undefined
 		this.noInput = GAME.NO_INPUT
 	}
 
@@ -14,7 +14,7 @@ export class Replay {
 		console.log(actions)
 	}
 
-	getInput(time, state) {
+	getPosition(time, state) {
 		let action = this.actions[0]
 		
 		// first case scenario
@@ -27,9 +27,12 @@ export class Replay {
 		let timeDelta = Number((Date.now() - time))
 
 		// todo - last finsh state
-		if (action.input === undefined) {
-			return this.lastAction.input
+		if (!action.position) {
+			console.log('last')
+			//console.log(this.prevAction.position)
+			return this.prevAction.position
 		}
+		
 
 		// add timesplip to compensate playback
 		if (!this.timeSlip && action.time < timeDelta) {
@@ -42,25 +45,25 @@ export class Replay {
 		// compare time with event.time
 		timeDelta = action.time - timeDelta+this.timeSlip
 		if (timeDelta < 0) {
-			console.log(timeDelta, this.timeSlip)
+	//		console.log(timeDelta, this.timeSlip)
 			
 			if (timeDelta < -10) {
 				//state.repositionPlayer(action.pos)
 			}
 			
-			this.lastAction = action
+			this.prevAction = action
 			this.actions.shift()			
 		//	console.log('new', action)
-			return action.input
+			return action.position
 
 		} else {
-			if (this.lastAction !== undefined && this.lastAction.input !== undefined) {
-		//		console.log('last', this.lastAction)
-				return this.lastAction.input
+			if (this.prevAction !== undefined && this.prevAction.position !== undefined) {
+				console.log('previous', this.prevAction)
+				return this.prevAction.position
 
 			} else {
-				console.log('none', this.action, this.lastAction)
-				return this.noInput
+				console.log('none', this.action, this.prevAction)
+				return null
 
 			}
 		}

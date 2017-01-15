@@ -1,7 +1,7 @@
 
 const input = (state, action) => {
   switch (action.type) {
-    case 'INPUT':
+    case 'STATE_POSITION':
       return {
         input: action.id,
         time: action.time,
@@ -19,10 +19,9 @@ const finish = (state, action) => {
   }
 }
 
-export const inputs = (state = [], action) => {
-  console.log('input')
+export const positions = (state = [], action) => {
   switch (action.type) {
-    case 'INPUT':
+    case 'STATE_POSITION':
       return [...state, input(undefined, action)]
     case 'FINISH':
       return [...state, finish(undefined, action)]
@@ -31,4 +30,4 @@ export const inputs = (state = [], action) => {
 	}
 }
 
-export default inputs
+export default positions

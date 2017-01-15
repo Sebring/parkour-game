@@ -93,7 +93,6 @@ export class ExampleState extends Phaser.State {
       console.log((Date.now() - this.timer)/1000  + ' seconds')
 
       if (this.game_state.isFinished) {
-        // it was a ghost run
         this.game.paused = true;
         return;
       }
@@ -112,53 +111,37 @@ export class ExampleState extends Phaser.State {
       this.game.trigger(STATE_EVENTS.EXAMPLE_COMPLETED)
       // reset player position
       let p = this.playerGroup.children[0]
-      this.player.x = p.x
-      this.player.y = p.y
+      this.player.body.x = p.x
+      this.player.body.y = p.y
       this.ghost = new Player(this.game, p.x, p.y)
       this.ghost.alpha = 0.5
+      this.ghost.body.allowGravity= false
       
-      this.ghost.setInputSource(this._inputSourceReplay)
       this.player.setInputSource(this._inputSourceKeyboard)
       // reset timer
       this.timer = false
       this.timeSlip = false
     }
 
-    repositionPlayer(position) {
-      console.log('reposition', position)
-      console.log(`x:${this.player.body.x}, y:${this.player.body.y}`)
-    //  this.player.body.x = position.x
-      this.player.body.y = position.y
-    }
-
-    _getInput() {
-      if (!this.game_state.isFinished) {
-        let i = {up:this.cursors.up.isDown, down:this.cursors.down.isDown, 
-            left:this.cursors.left.isDown, right:this.cursors.right.isDown, 
-            jump:this.jumpButton.isDown}
-        this._addInputToStore(i) 
-        return i
-      } else {
-        // use input from replay
-        if (!this.timer)
-          this.timer = Date.now()
-        return this.replay.getInput(this.timer, this)
-      }
-    }
-
     _inputSourceKeyboard = () => {
       let i = {up:this.cursors.up.isDown, down:this.cursors.down.isDown, 
             left:this.cursors.left.isDown, right:this.cursors.right.isDown, 
             jump:this.jumpButton.isDown}
-      this._addInputToStore(i) 
+      //this._addInputToStore(i)
+      if (this.game_state.isFinished === false)
+        this._addPositionToStore();
       return i
     }
 
-    _inputSourceReplay = () =>  {
+    _setReplayPosition = () =>  {
       // use input from replay
       if (!this.timer)
         this.timer = Date.now()
-      return this.replay.getInput(this.timer, this)
+      
+      let p = this.replay.getPosition(this.timer, this)
+      if (p) {
+        this.ghost.body.position = p
+      }
     }
 
     update() {
@@ -167,11 +150,10 @@ export class ExampleState extends Phaser.State {
       this.physics.arcade.overlap(this.player, this.goalGroup, () => {
         this.player.setInputSource()
         this._finish()
-        return
       })
        // ghost reached goal
       this.physics.arcade.overlap(this.ghost, this.goalGroup, () => {
-        this.ghost.setInputSource()
+        console.log('Ghost win')
         return
       })
 
@@ -186,25 +168,26 @@ export class ExampleState extends Phaser.State {
 
       if (!this.ghost) return;
 
-
-      input = this.ghost.getInput()
-      if (!input) return;
-      
-      // player vs tile
-      this.physics.arcade.collide(this.ghost, this.layer, (player, tile) => {
-        player.handlePlatform(tile, input)          
-      })
-
-      this.ghost.handleInput(input)
-    
+      this._setReplayPosition();
     }
 
+    /*
     _addInputToStore(input) {
       if (JSON.stringify(input) !== JSON.stringify(this.lastInput)) {
         this.lastInput = input
         let pos = {x:this.player.body.x, y:this.player.body.y}
         this.store.dispatch({type:'INPUT', id:input, time:Number((Date.now() - this.timer)), pos:pos})
       }
+    }
+    */
+
+    _addPositionToStore() {
+      if (this.game_state.isFinished === true)
+        return
+     let position = {}
+     position.x = this.player.body.position.x;
+     position.y = this.player.body.position.y;
+     this.store.dispatch({type:'STATE_POSITION', id:null, time:Number((Date.now() - this.timer)), position:position})
     }
 
     render() {

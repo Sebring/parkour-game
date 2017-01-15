@@ -1,9 +1,9 @@
 import { createStore } from 'redux'
-import input from './inputReducer'
+import positions from './positionsReducer'
 
 const setupStore = () => {
 	console.log('Setting up redux store')
-	const store = createStore(input)
+	const store = createStore(positions)
 
 	return store
 }
