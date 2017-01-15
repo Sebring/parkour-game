@@ -104,11 +104,15 @@ export class ExampleState extends Phaser.State {
 
     _finish() {
       console.log("WIN CONDITION!")
-      console.log((Date.now() - this.timer)/1000  + ' seconds')
+      let finishTime = Number((Date.now() - this.timer)).toString()
+      // be fair and move ghost if it has a move waiting
+      if (this.ghost)
+        this._setReplayPosition();
+
+      console.log(finishTime/1000  + ' seconds')
       
       this.game.physics.arcade.isPaused = true
       this.player.setInputSource(this._inputSourceKeyboard)
-
 
       // menu
       this.menu = this.game.add.text(100, 100 ,'Space to start', {font: "54px Arial Black", fill: "#c51b7d" })
@@ -122,6 +126,10 @@ export class ExampleState extends Phaser.State {
       this.jumpButton.onDown.addOnce( () => {
         this.game.physics.arcade.isPaused = false
         this.menu.destroy()
+              let p = this.playerGroup.children[0]
+      this.player.body.velocity.set(0,0)
+      this.player.x = p.x
+      this.player.y = p.y
         this.timer = Date.now();
       })
 
@@ -130,7 +138,7 @@ export class ExampleState extends Phaser.State {
         return;
       }
 
-      let finishTime = Number((Date.now() - this.timer)).toString()
+      
       this.store.dispatch({type:'FINISH', game_event:'FINISH', time:finishTime})
       //this.game.paused = true
       this.game_state.isFinished = true
@@ -143,11 +151,9 @@ export class ExampleState extends Phaser.State {
       
       this.game.trigger(STATE_EVENTS.EXAMPLE_COMPLETED)
       // reset player position
-      let p = this.playerGroup.children[0]
-      this.player.body.velocity.set(0,0)
-      this.player.body.x = p.x
-      this.player.body.y = p.y
-      this.ghost = new Player(this.game, p.x, p.y)
+      //let p = this.playerGroup.children[0]
+      this.player.reset()
+      this.ghost = new Player(this.game, this.player.x, this.player.y)
       this.ghost.anchor.set(0.5,0.5)
       this.ghost.alpha = 0.5
       this.ghost.body.allowGravity= false

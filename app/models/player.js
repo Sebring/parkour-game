@@ -6,24 +6,34 @@ export class Player extends Phaser.Sprite {
     super(game, x, y, key)
     game.add.existing(this)
     
-    this.canJump = true
-    this.isJumping = false
-    this.isClimbing = false
+    this.reset.x = x
+    this.reset.y = y
+    this.reset.scaleX = 0.3
+    this.reset.scaleY = 0.5
 
     // physics
     game.physics.arcade.enable(this)
-    this.body.drag.x = 100
 
     // random color
     this.tint = Math.random() * 0xffffff
 
     this._addAnimations()
 
-    
-    this.scaleX = 0.3
-    this.scale.y = 0.5
-    this.scale.x = this.scaleX
+    this.reset()
+  }
+
+  reset() {
+    this.x = this.reset.x
+    this.y = this.reset.y
+    this.body.drag.x = 100
+    this.body.velocity.set(0,0)
+    this.scale.x = this.reset.scaleX
+    this.scale.y = this.reset.scaleY
     this.anchor.setTo(0.5, 0.5)
+
+    this.canJump = true
+    this.isJumping = false
+    this.isClimbing = false
   }
 
   setInputSource(handler) {
@@ -128,12 +138,12 @@ export class Player extends Phaser.Sprite {
     if (input.left) {
       if (true || !this.isFalling()) {
         this.body.velocity.x = -250
-        if (this.scale.x < 0) this.scale.x = this.scaleX
+        if (this.scale.x < 0) this.scale.x = this.reset.scaleX
       }
     } else if (input.right) {
       if (true || !this.isFalling()) {
         this.body.velocity.x = 250
-        if (this.scale.x > 0) this.scale.x = -this.scaleX
+        if (this.scale.x > 0) this.scale.x = -this.reset.scaleX
       }
     }
 
