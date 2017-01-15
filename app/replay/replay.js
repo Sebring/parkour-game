@@ -16,6 +16,11 @@ export class Replay {
 
 	getPosition(time, state) {
 		let action = this.actions[0]
+
+		if (action === undefined) {
+			console.log('no more actions ', this.actions)
+			return null
+		}
 		
 		// first case scenario
 		if (isNaN(action.time)) {
@@ -30,10 +35,10 @@ export class Replay {
 		if (!action.position) {
 		//	console.log('last')
 			//console.log(this.prevAction.position)
-			return this.prevAction.position
+
+			return this.prevAction? this.prevAction.position : null
 		}
 		
-
 		// add timesplip to compensate playback
 		if (!this.timeSlip && action.time < timeDelta) {
 			// adjust timeslip - once

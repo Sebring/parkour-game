@@ -104,15 +104,15 @@ export class ExampleState extends Phaser.State {
 
     _finish() {
       console.log("WIN CONDITION!")
+      
       let finishTime = Number((Date.now() - this.timer)).toString()
+      console.log(finishTime/1000  + ' seconds')
+      
       // be fair and move ghost if it has a move waiting
       if (this.ghost)
         this._setReplayPosition();
-
-      console.log(finishTime/1000  + ' seconds')
       
       this.game.physics.arcade.isPaused = true
-      this.player.setInputSource(this._inputSourceKeyboard)
 
       // menu
       this.menu = this.game.add.text(100, 100 ,'Space to start', {font: "54px Arial Black", fill: "#c51b7d" })
@@ -122,43 +122,44 @@ export class ExampleState extends Phaser.State {
       this.menu.padding.set(10, 16)
       this.menu.inputEnabled = true
 
-
       this.jumpButton.onDown.addOnce( () => {
         this.game.physics.arcade.isPaused = false
         this.menu.destroy()
-              let p = this.playerGroup.children[0]
-      this.player.body.velocity.set(0,0)
-      this.player.x = p.x
-      this.player.y = p.y
-        this.timer = Date.now();
+        let p = this.playerGroup.children[0]
+        this.player.body.velocity.set(0,0)
+        this.player.x = p.x
+        this.player.y = p.y
+        this.timer = Date.now()
+        this.store = setupStore()
+        this.game_state.finishTime = false
       })
 
-      if (this.game_state.isFinished) {
+      /*if (this.game_state.isFinished) {
         this.game.paused = true;
         return;
-      }
+      }*/
 
-      
-      this.store.dispatch({type:'FINISH', game_event:'FINISH', time:finishTime})
+      //this.store.dispatch({type:'FINISH', game_event:'FINISH', time:finishTime})
       //this.game.paused = true
       this.game_state.isFinished = true
       this.game_state.finishTime = finishTime
       
       // save replay and clear
       this.replay = new Replay(this.store.getState())
-      this.store = setupStore()
+
       //this._addInputToStore(GAME.NO_INPUT);
       
       this.game.trigger(STATE_EVENTS.EXAMPLE_COMPLETED)
       // reset player position
       //let p = this.playerGroup.children[0]
       this.player.reset()
+      if (this.ghost)
+        this.ghost.destroy()
       this.ghost = new Player(this.game, this.player.x, this.player.y)
       this.ghost.anchor.set(0.5,0.5)
       this.ghost.alpha = 0.5
       this.ghost.body.allowGravity= false
       
-      this.player.setInputSource(this._inputSourceKeyboard)
       // reset timer
       this.timer = false
       this.timeSlip = false
@@ -168,10 +169,9 @@ export class ExampleState extends Phaser.State {
       let i = {up:this.cursors.up.isDown, down:this.cursors.down.isDown, 
             left:this.cursors.left.isDown, right:this.cursors.right.isDown, 
             jump:this.jumpButton.isDown}
-      //this._addInputToStore(i)
-      if (this.game_state.isFinished === false)
-        this._addPositionToStore();
-      return i
+     // if (this.game_state.isFinished === false)
+        this._addPositionToStore()
+        return i
     }
 
     _setReplayPosition = () =>  {
@@ -192,7 +192,7 @@ export class ExampleState extends Phaser.State {
         
       // player reached goal
       this.physics.arcade.overlap(this.player, this.goalGroup, () => {
-        this.player.setInputSource()
+        //this.player.setInputSource()
         this._finish()
       })
        // ghost reached goal
@@ -216,8 +216,8 @@ export class ExampleState extends Phaser.State {
     }
 
     _addPositionToStore() {
-      if (this.game_state.isFinished === true)
-        return
+    //  if (this.game_state.isFinished === true)
+    //    return
      let position = {}
      position.x = this.player.body.position.x;
      position.y = this.player.body.position.y;
@@ -225,7 +225,7 @@ export class ExampleState extends Phaser.State {
     }
 
     render() {
-      let timeValue = this.game_state.isFinished? this.game_state.finishTime/1000 : Number((Date.now() - this.timer)/1000).toFixed(2)
+      let timeValue = this.game_state.finishTime? this.game_state.finishTime/1000 : Number((Date.now() - this.timer)/1000).toFixed(2)
         this.countDownText.text = timeValue  + ' s'
     }
 }
