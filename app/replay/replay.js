@@ -18,7 +18,7 @@ export class Replay {
 		let action = this.actions[0]
 
 		if (action === undefined) {
-			console.log('no more actions ', this.actions)
+			//console.log('no more actions ', this.actions)
 			return null
 		}
 		
