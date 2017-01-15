@@ -29,17 +29,8 @@
                  "type":"",
                  "visible":true,
                  "width":32,
-<<<<<<< HEAD
-<<<<<<< HEAD
-                 "x":655,
-=======
-                 "x":638,
->>>>>>> e05c272... feat: enable multiple runs in a row
-                 "y":296
-=======
-                 "x":652,
+                 "x":653,
                  "y":313
->>>>>>> fe24ed4... fixup! feat: add paused state at map start
                 }, 
                 {
                  "gid":2,
