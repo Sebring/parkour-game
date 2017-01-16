@@ -15,7 +15,7 @@ export class ExampleState extends Phaser.State {
       // game states
       this.game_state = {
         isFinished: false,
-        finishTime: '0.0',
+        finishTime: false,
         replayState: undefined
       }
 
@@ -125,10 +125,7 @@ export class ExampleState extends Phaser.State {
       this.jumpButton.onDown.addOnce( () => {
         this.game.physics.arcade.isPaused = false
         this.menu.destroy()
-        let p = this.playerGroup.children[0]
-        this.player.body.velocity.set(0,0)
-        this.player.x = p.x
-        this.player.y = p.y
+        this.player.reset()
         this.timer = Date.now()
         this.store = setupStore()
         this.game_state.finishTime = false
