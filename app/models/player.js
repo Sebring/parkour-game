@@ -25,6 +25,8 @@ export class Player extends Phaser.Sprite {
   reset() {
     this.x = this.reset.x
     this.y = this.reset.y
+    this.body.x = this.reset.x
+    this.body.y = this.reset.y
     this.body.drag.x = 100
     this.body.velocity.set(0,0)
     this.scale.x = this.reset.scaleX
