@@ -3,7 +3,7 @@ import GAME from '../constants/game'
 export class Replay {
 
 	constructor(actions) {
-		console.log(actions)
+		//console.log(actions)
 		this.timeSlip = false
 		this.actions = actions
 		this.prevAction = undefined
@@ -11,7 +11,7 @@ export class Replay {
 	}
 
 	setActions(actions) {
-		console.log(actions)
+		//console.log(actions)
 	}
 
 	getPosition(time, state) {
@@ -43,7 +43,7 @@ export class Replay {
 		if (!this.timeSlip && action.time < timeDelta) {
 			// adjust timeslip - once
 			this.timeSlip = timeDelta - action.time
-			console.log('adjust timeslip', this.timeSlip)
+			console.log('R/adjust timeslip', this.timeSlip)
 
 		}
 
@@ -67,7 +67,7 @@ export class Replay {
 				return this.prevAction.position
 
 			} else {
-				console.log('none', this.action, this.prevAction)
+				console.log('R/none', this.action, this.prevAction)
 				return null
 
 			}

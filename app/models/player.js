@@ -89,7 +89,7 @@ export class Player extends Phaser.Sprite {
   handlePlatform(tile, input) {
     if (this.body.blocked.down) {
       if (this.pvy !== 0) {
-        console.log('impact: ', this.pvy)
+        //console.log('impact: ', this.pvy)
         
         
         if (this.pvy > 400) {
@@ -168,7 +168,7 @@ export class Player extends Phaser.Sprite {
         let heightDiff = ledge.worldY - this.body.y
         
         // animation frame depending on climb %
-        console.log(heightDiff)
+        //console.log(heightDiff)
         let frame = 7
         if (heightDiff < 20) {
           frame = 4
@@ -254,15 +254,5 @@ export class Player extends Phaser.Sprite {
           console.log('stop climb')
           this.body.velocity.y = 0;
         }
-
-/*
-        if (this.jumpButton.isDown) {
-            console.log(this.body.velocity.y)
-            console.log(this.body.acceleration.y)
-            this.body.velocity.y -= 20
-            this.body.velocity.clampY(-160, 160)
-        } else {
-            
-        }*/
     }
 }
