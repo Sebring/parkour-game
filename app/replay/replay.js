@@ -4,10 +4,17 @@ export class Replay {
 
 	constructor(actions) {
 		//console.log(actions)
-		this.timeSlip = false
-		this.actions = actions
-		this.prevAction = undefined
+		
+		//this.actions = actions
+		this.store = actions
 		this.noInput = GAME.NO_INPUT
+		this.reset()
+	}
+
+	reset(actions = this.store) {
+		this.actions = actions
+		this.timeSlip = false
+		this.prevAction = undefined
 	}
 
 	setActions(actions) {
@@ -26,7 +33,7 @@ export class Replay {
 		if (isNaN(action.time)) {
 		//	console.log('start')
 			this.actions.shift()
-			return this.getInput(time)
+			return this.getPosition(time)
 		}
 
 		let timeDelta = Number((Date.now() - time))

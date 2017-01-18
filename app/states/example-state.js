@@ -4,6 +4,7 @@ import STATE_EVENTS from '../constants/state-events'
 import { Player } from '../models/player'
 import setupStore from '../replay/setupStore'
 import { Replay } from '../replay/replay'
+import { Menu} from '../menu/menu'
 
 export class ExampleState extends Phaser.State {
     map = null
@@ -20,10 +21,10 @@ export class ExampleState extends Phaser.State {
       }
 
       // store
-      this.store = setupStore()
-      this._renderStore()
-      this.store.subscribe(this._renderStore)
-      this.lastInput = false;
+     // this.store = setupStore()
+     // this._renderStore()
+     // this.store.subscribe(this._renderStore)
+     // this.lastInput = false;
       
       /* TODO add start action with date.now()
         this.store.dispatch({type:'ADD_INPUT', 
@@ -66,23 +67,30 @@ export class ExampleState extends Phaser.State {
 
 
       // menu
-      this.menu = this.game.add.text(100, 100 ,'Space to start', {font: "54px Arial Black", fill: "#c51b7d" })
-      this.menu.stroke = '#de77ae'
-      this.menu.strokeThickness = 10
-      this.menu.setShadow(2, 2, "#333333", 2, true, true)
-      this.menu.padding.set(10, 16)
-      this.menu.inputEnabled = true
-
-
-      this.jumpButton.onDown.addOnce( () => {
-        this.game.physics.arcade.isPaused = false
-        this.menu.destroy()
-        this.timer = Date.now();
+      this.Menu = new Menu(this.game)
+      this.Menu.addMenuItem('Start New', undefined, 100, () => {
+        this.startNewGame(true)
       })
+      //this.menuFactory.select(this.menu[0])
+
+      this.jumpButton.onDown.add( () => {
+        if (this.Menu.isVisible())
+          this.Menu.onAction()
+      })
+
+      this.game.input.keyboard.addKey(Phaser.Keyboard.DOWN).onDown.add( () => {
+        if (this.Menu.isVisible())
+          this.Menu.selectNext()
+      })
+      this.game.input.keyboard.addKey(Phaser.Keyboard.UP).onDown.add( () => {
+        if (this.Menu.isVisible())
+          this.Menu.selectPrev()
+      })
+
 
       // timer
       const bannerText = 'Parkour.io'
-      this.countDownText = this.add.text(this.world.centerX, 25, bannerText)
+      this.countDownText = this.game.add.text(this.world.centerX, 25, bannerText)
       //banner.font = 'Bangers'
       this.countDownText.padding.set(10, 16)
       this.countDownText.fontSize = 32
@@ -91,9 +99,9 @@ export class ExampleState extends Phaser.State {
       this.countDownText.anchor.setTo(0.5)
 
       // author and version text
-      let text = this.add.text(this.world.centerX, this.world.bottom - 30, 
+      let author = this.game.add.text(this.world.centerX, this.world.bottom - 30, 
         'v'+GAME.VERSION + ' - Johan Sebring')
-      text.fontSize = 16
+      author.fontSize = 16
     }
 
     _renderStore = () => {
@@ -102,71 +110,96 @@ export class ExampleState extends Phaser.State {
     */
     }
 
-    _finish() {
-      console.log("WIN CONDITION!")
-      
-      let finishTime = Number((Date.now() - this.timer)).toString()
-      console.log(finishTime/1000  + ' seconds')
-      
-      // be fair and move ghost if it has a move waiting
-      if (this.ghost)
-        this._setReplayPosition();
-      
-      this.game.physics.arcade.isPaused = true
-
-      // menu
-      this.menu = this.game.add.text(100, 100 ,'Space to start', {font: "54px Arial Black", fill: "#c51b7d" })
-      this.menu.stroke = '#de77ae'
-      this.menu.strokeThickness = 10
-      this.menu.setShadow(2, 2, "#333333", 2, true, true)
-      this.menu.padding.set(10, 16)
-      this.menu.inputEnabled = true
-
-      this.jumpButton.onDown.addOnce( () => {
-        this.game.physics.arcade.isPaused = false
-        this.menu.destroy()
-        this.player.reset()
-        this.timer = Date.now()
-        this.store = setupStore()
-        this.game_state.finishTime = false
-      })
-
-      /*if (this.game_state.isFinished) {
-        this.game.paused = true;
-        return;
-      }*/
-
-      //this.store.dispatch({type:'FINISH', game_event:'FINISH', time:finishTime})
-      //this.game.paused = true
-      this.game_state.isFinished = true
-      this.game_state.finishTime = finishTime
-      
-      // save replay and clear
-      this.replay = new Replay(this.store.getState())
-
-      //this._addInputToStore(GAME.NO_INPUT);
-      
-      this.game.trigger(STATE_EVENTS.EXAMPLE_COMPLETED)
-      // reset player position
-      //let p = this.playerGroup.children[0]
+    _resetGame(resetStore = true) {
       this.player.reset()
+      this.timer = false
       if (this.ghost)
         this.ghost.destroy()
+      this.ghost = false
+      if (resetStore) {
+        this.store = setupStore()
+        this.replay = null
+      }
+      this.game_state.finishTime = false
+    }
+
+    _startGame() {
+      this.timer = Date.now()
+      this.Menu.hide()
+      this.game.physics.arcade.isPaused = false
+    }
+
+    startNewGame(startGame = false) {  
+      
+      // reset game state and replay
+      this._resetGame(true)
+
+      // start game?
+      startGame && this._startGame()
+    }
+
+    startNewRace(startGame = false) {      
+
+      // reset game state
+      this._resetGame(false)
+
+      // reset ghost
       this.ghost = new Player(this.game, this.player.x, this.player.y)
       this.ghost.anchor.set(0.5,0.5)
       this.ghost.alpha = 0.5
       this.ghost.body.allowGravity= false
+
+      // replay
+      this.replay.reset() // = new Replay(this.store.getState())
+      this.store = setupStore()
+
+      // start game
+      startGame && this._startGame()
+    }
+
+    _finish() {
+      console.log("WIN CONDITION!")
       
-      // reset timer
-      this.timer = false
-      this.timeSlip = false
+      // timer
+      let finishTime = Number((Date.now() - this.timer)).toString()
+      this.game_state.finishTime = finishTime
+      console.log(finishTime/1000  + ' seconds')
+      
+      // reset player (do this before pause)
+      this.player.reset()
+      if (this.ghost) {
+        // update ghost to latest tick
+        this._setReplayPosition();
+      }
+      
+      // save replay
+      this.replay = new Replay(this.store.getState())
+  
+      // menu
+      // FIXME: hide if no ghost
+      this.Menu.addMenuItem('Race vs Ghost', undefined, undefined, () => {
+        this.startNewRace(true)
+      })
+      
+      this.Menu.show()
+
+      // pause
+      this.game.physics.arcade.isPaused = true
+
+
+      
+      // save replay and clear
+     // this.replay = new Replay(this.store.getState())
+
+      // example - trigger event
+      //this.game.trigger(STATE_EVENTS.EXAMPLE_COMPLETED)
     }
 
     _inputSourceKeyboard = () => {
       let i = {up:this.cursors.up.isDown, down:this.cursors.down.isDown, 
             left:this.cursors.left.isDown, right:this.cursors.right.isDown, 
             jump:this.jumpButton.isDown}
-     // if (this.game_state.isFinished === false)
+
         this._addPositionToStore()
         return i
     }
@@ -184,6 +217,8 @@ export class ExampleState extends Phaser.State {
 
     update() {
       if (this.game.physics.arcade.isPaused) {
+      
+
         return
       }
         
@@ -213,8 +248,6 @@ export class ExampleState extends Phaser.State {
     }
 
     _addPositionToStore() {
-    //  if (this.game_state.isFinished === true)
-    //    return
      let position = {}
      position.x = this.player.body.position.x;
      position.y = this.player.body.position.y;
