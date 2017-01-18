@@ -3,9 +3,10 @@ const input = (state, action) => {
   switch (action.type) {
     case 'STATE_POSITION':
       return {
-        input: action.id,
         time: action.time,
-        position: action.position
+        position: action.position,
+        frame: action.frame,
+        scaleX: action.scaleX
       }
     default:
       return state

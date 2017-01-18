@@ -10,26 +10,13 @@ export class ExampleState extends Phaser.State {
     map = null
     layer = null
 
-
     create() {
 
       // game states
       this.game_state = {
-        isFinished: false,
         finishTime: false,
-        replayState: undefined
       }
 
-      // store
-     // this.store = setupStore()
-     // this._renderStore()
-     // this.store.subscribe(this._renderStore)
-     // this.lastInput = false;
-      
-      /* TODO add start action with date.now()
-        this.store.dispatch({type:'ADD_INPUT', 
-        id:1,time:Date.now()})
-      */
       this.physics.startSystem(Phaser.Physics.ARCADE)
       this.physics.arcade.gravity.y = GAME.GRAVITY
 
@@ -65,13 +52,12 @@ export class ExampleState extends Phaser.State {
       this.game.physics.arcade.isPaused = true
       this.player.setInputSource(this._inputSourceKeyboard)
 
-
       // menu
       this.Menu = new Menu(this.game)
       this.Menu.addMenuItem('Start New', undefined, 100, () => {
         this.startNewGame(true)
       })
-      //this.menuFactory.select(this.menu[0])
+      this.Menu.select(0)
 
       this.jumpButton.onDown.add( () => {
         if (this.Menu.isVisible())
@@ -86,7 +72,6 @@ export class ExampleState extends Phaser.State {
         if (this.Menu.isVisible())
           this.Menu.selectPrev()
       })
-
 
       // timer
       const bannerText = 'Parkour.io'
@@ -105,9 +90,6 @@ export class ExampleState extends Phaser.State {
     }
 
     _renderStore = () => {
-    /* console.log('dispatch')
-      console.log(this.store.getState())
-    */
     }
 
     _resetGame(resetStore = true) {
@@ -167,16 +149,15 @@ export class ExampleState extends Phaser.State {
       
       // reset player (do this before pause)
       this.player.reset()
+      
       if (this.ghost) {
-        // update ghost to latest tick
-        this._setReplayPosition();
+        this._updateGhost()
       }
       
       // save replay
       this.replay = new Replay(this.store.getState())
   
       // menu
-      // FIXME: hide if no ghost
       this.Menu.addMenuItem('Race vs Ghost', undefined, undefined, () => {
         this.startNewRace(true)
       })
@@ -186,39 +167,37 @@ export class ExampleState extends Phaser.State {
       // pause
       this.game.physics.arcade.isPaused = true
 
-
-      
-      // save replay and clear
-     // this.replay = new Replay(this.store.getState())
-
-      // example - trigger event
-      //this.game.trigger(STATE_EVENTS.EXAMPLE_COMPLETED)
     }
 
     _inputSourceKeyboard = () => {
       let i = {up:this.cursors.up.isDown, down:this.cursors.down.isDown, 
             left:this.cursors.left.isDown, right:this.cursors.right.isDown, 
             jump:this.jumpButton.isDown}
-
-        this._addPositionToStore()
-        return i
+      return i
     }
 
-    _setReplayPosition = () =>  {
-      // use input from replay
-      if (!this.timer)
-        this.timer = Date.now()
+    _updateGhost() {
       
-      let p = this.replay.getPosition(this.timer, this)
-      if (p) {
+      let a = this.replay.getAction(this.timer, this)
+      
+      if (!a)
+        return
+      
+      let p = a.position
+      if (p)
         this.ghost.body.position = p
-      }
+
+      let f = a.frame
+      if (f)
+        this.ghost.animations.frame = f
+      
+      let s = a.scaleX
+      if (s)
+        this.ghost.scale.x = s
     }
 
     update() {
       if (this.game.physics.arcade.isPaused) {
-      
-
         return
       }
         
@@ -229,7 +208,6 @@ export class ExampleState extends Phaser.State {
       })
        // ghost reached goal
       this.physics.arcade.overlap(this.ghost, this.goalGroup, () => {
-        //console.log('Ghost win')
         return
       })
 
@@ -242,16 +220,22 @@ export class ExampleState extends Phaser.State {
 
       this.player.handleInput(input)
 
-      if (!this.ghost) return;
+      this._addReplayState()
 
-      this._setReplayPosition();
+      if (this.ghost) {
+        this._updateGhost()
+      }
     }
 
-    _addPositionToStore() {
+    _addReplayState() {
      let position = {}
-     position.x = this.player.body.position.x;
-     position.y = this.player.body.position.y;
-     this.store.dispatch({type:'STATE_POSITION', id:null, time:Number((Date.now() - this.timer)), position:position})
+     position.x = this.player.body.position.x
+     position.y = this.player.body.position.y
+     let frame = this.player.animations.frame
+     let scaleX = this.player.scale.x
+     this.store.dispatch(
+      { type:'STATE_POSITION', time:Number((Date.now() - this.timer)), 
+        position, frame, scaleX})
     }
 
     render() {
