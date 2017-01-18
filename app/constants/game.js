@@ -1,5 +1,5 @@
 export default {
-	VERSION: '0.0.3',
+	VERSION: '0.0.4',
     WIDTH: 800,
     HEIGHT: 480,
     GRAVITY: 880,
