@@ -7,7 +7,8 @@ export class LoadingState extends Phaser.State {
     this.load.setPreloadSprite(loader)
 
     this.load.image('player', 'assets/images/player.png')
-    this.load.spritesheet('p_run', 'assets/sprites/stickman_run.png', 100,150)
+    //this.load.spritesheet('p_run', 'assets/sprites/stickman_run.png', 100,150)
+    this.load.spritesheet('run', 'assets/sprites/run.png', 96,125)
     this.load.spritesheet('gimp', 'assets/sprites/gimp.png', 80,110)
     this.load.image('background', 'assets/images/background.png')
     this.load.tilemap('example-map', 'assets/maps/example-map.json', null, Phaser.Tilemap.TILED_JSON)

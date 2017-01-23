@@ -2,7 +2,7 @@ import PLAYER from '../constants/player'
 import GAME from '../constants/game'
 
 export class Player extends Phaser.Sprite {
-  constructor(game, x = 0, y = 0, key = 'gimp') {
+  constructor(game, x = 0, y = 0, key = 'run') {
     super(game, x, y, key)
     game.add.existing(this)
     
@@ -47,7 +47,7 @@ export class Player extends Phaser.Sprite {
   }
 
   _addAnimations() {
-    this.animations.add('run', [0,1,2,3], 6, true)
+    this.animations.add('run', [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15], 20, true)
     this.animations.add('climb', [4,5,6,7]) //, 1, false)
     this.animations.add('fall' [4])
     this.animations.play('run')    
@@ -140,12 +140,12 @@ export class Player extends Phaser.Sprite {
     if (input.left) {
       if (true || !this.isFalling()) {
         this.body.velocity.x = -250
-        if (this.scale.x < 0) this.scale.x = this.reset.scaleX
+        if (this.scale.x > 0) this.scale.x = -this.reset.scaleX
       }
     } else if (input.right) {
       if (true || !this.isFalling()) {
         this.body.velocity.x = 250
-        if (this.scale.x > 0) this.scale.x = -this.reset.scaleX
+        if (this.scale.x < 0) this.scale.x = this.reset.scaleX
       }
     }
 
