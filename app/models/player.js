@@ -9,7 +9,7 @@ export class Player extends Phaser.Sprite {
     this.reset.x = x
     this.reset.y = y
     this.reset.scaleX = 0.3
-    this.reset.scaleY = 0.5
+    this.reset.scaleY = 0.4
 
     // physics
     game.physics.arcade.enable(this)
