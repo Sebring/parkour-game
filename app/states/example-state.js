@@ -132,7 +132,7 @@ export class ExampleState extends Phaser.State {
       this.ghost.body.allowGravity= false
 
       // replay
-      this.replay.reset() // = new Replay(this.store.getState())
+      this.replay.reset()
       this.store = setupStore()
 
       // start game
